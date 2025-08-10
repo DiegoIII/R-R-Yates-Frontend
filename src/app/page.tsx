@@ -3,6 +3,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
+import YachtList from "@/components/YachtList";
 
 export default function HomePage() {
   const { user, logout, isLoading } = useAuth();
@@ -247,6 +248,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Yacht List Section */}
+      <YachtList />
 
       {/* Footer */}
       <footer className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-12">
