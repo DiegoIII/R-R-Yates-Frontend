@@ -48,9 +48,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setToken(response.token);
       localStorage.setItem('token', response.token);
       
-      // Obtener información del usuario
-      const userData = await authAPI.getCurrentUser(response.token);
-      setUser(userData);
+      // Si el backend devuelve información del usuario, la usamos
+      if (response.user) {
+        setUser(response.user);
+      } else {
+        // Por ahora, creamos un usuario básico con la información disponible
+        // En el futuro, esto se puede reemplazar con getCurrentUser cuando funcione
+        const userData: User = {
+          email: credentials.email,
+          name: credentials.email.split('@')[0], // Usar parte del email como nombre temporal
+          role: 'USER'
+        };
+        setUser(userData);
+      }
+      
+      // Comentamos la llamada a getCurrentUser hasta que funcione
+      // const userData = await authAPI.getCurrentUser(response.token);
+      // setUser(userData);
     } catch (error) {
       console.error('Error en login:', error);
       throw error;

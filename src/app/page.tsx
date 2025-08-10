@@ -3,6 +3,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
+import BackendStatus from "@/components/BackendStatus";
 
 export default function HomePage() {
   const { user, logout, isLoading } = useAuth();
@@ -247,6 +248,15 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Backend Status Section - Solo visible para desarrollo */}
+      {process.env.NODE_ENV === 'development' && (
+        <section className="py-16 bg-gray-50">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <BackendStatus />
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-12">

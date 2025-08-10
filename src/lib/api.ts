@@ -23,6 +23,7 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
+  user?: User; // Agregar información del usuario si está disponible
 }
 
 export interface Yacht {
@@ -67,33 +68,68 @@ export const authAPI = {
   },
 
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    const response = await fetch(`${API_BASE_URLS.user}/api/users/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
-    });
-    
-    if (!response.ok) {
-      throw new Error('Credenciales inválidas');
+    try {
+      console.log('Intentando hacer login en:', `${API_BASE_URLS.user}/api/users/login`);
+      console.log('Credenciales:', { email: credentials.email, password: '***' });
+      
+      const response = await fetch(`${API_BASE_URLS.user}/api/users/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
+      
+      console.log('Respuesta del servidor de login:', response.status, response.statusText);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error del servidor de login:', errorText);
+        throw new Error(`Error en login: ${response.status} ${response.statusText}`);
+      }
+      
+      const loginData = await response.json();
+      console.log('Login exitoso, token recibido:', loginData.token ? `${loginData.token.substring(0, 10)}...` : 'No token');
+      console.log('Datos completos de login:', loginData);
+      return loginData;
+    } catch (error) {
+      console.error('Error completo en login:', error);
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        throw new Error(`No se pudo conectar al servidor de autenticación. Verifica que el backend esté ejecutándose en ${API_BASE_URLS.user}`);
+      }
+      throw error;
     }
-    
-    return response.json();
   },
 
   async getCurrentUser(token: string): Promise<User> {
-    const response = await fetch(`${API_BASE_URLS.user}/api/users/me`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error('Error al obtener usuario');
+    try {
+      console.log('Intentando obtener usuario actual desde:', `${API_BASE_URLS.user}/api/users/me`);
+      console.log('Token:', token ? `${token.substring(0, 10)}...` : 'No token');
+      
+      const response = await fetch(`${API_BASE_URLS.user}/api/users/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      console.log('Respuesta del servidor:', response.status, response.statusText);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error del servidor:', errorText);
+        throw new Error(`Error al obtener usuario: ${response.status} ${response.statusText}`);
+      }
+      
+      const userData = await response.json();
+      console.log('Usuario obtenido exitosamente:', userData);
+      return userData;
+    } catch (error) {
+      console.error('Error completo en getCurrentUser:', error);
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        throw new Error(`No se pudo conectar al servidor. Verifica que el backend esté ejecutándose en ${API_BASE_URLS.user}`);
+      }
+      throw error;
     }
-    
-    return response.json();
   }
 };
 
