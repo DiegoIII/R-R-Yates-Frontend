@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Yacht, catalogAPI } from '@/lib/api';
-import { Anchor, MapPin, Users, Calendar, DollarSign, Sailboat } from 'lucide-react';
+import { Anchor, MapPin, Users, Sailboat, DollarSign } from 'lucide-react';
+import Link from 'next/link';
 
 export default function YachtList() {
   const [yachts, setYachts] = useState<Yacht[]>([]);
@@ -164,7 +165,7 @@ export default function YachtList() {
                   <div className="flex items-center">
                     <DollarSign className="w-4 h-4 text-green-500 mr-1" />
                     <span className="text-lg font-bold text-green-600">
-                      ${yacht.pricePerDay?.toLocaleString() || yacht.price?.toLocaleString()}/día
+                      ${yacht.price?.toLocaleString()}/día
                     </span>
                   </div>
                   
@@ -180,10 +181,22 @@ export default function YachtList() {
                   </div>
                 </div>
 
-                {/* Botón de reserva */}
-                <button className="w-full mt-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
-                  {yacht.available ? 'Reservar Ahora' : 'Consultar Disponibilidad'}
-                </button>
+                {/* Botones de acción */}
+                <div className="flex space-x-3 mt-4">
+                  <Link
+                    href={`/booking?yachtId=${yacht.id}`}
+                    className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-center text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  >
+                    {yacht.available ? 'Reservar' : 'Consultar'}
+                  </Link>
+                  
+                  <Link
+                    href={`/catalog/${yacht.id}`}
+                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-center text-sm"
+                  >
+                    Ver Detalles
+                  </Link>
+                </div>
               </div>
             </div>
           ))}
