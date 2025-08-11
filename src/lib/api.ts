@@ -49,6 +49,53 @@ export interface Booking {
   paymentConfirmed?: boolean;
 }
 
+// Función de utilidad para verificar conectividad del backend
+export const testBackendConnectivity = async () => {
+  const results = {
+    user: false,
+    booking: false,
+    catalog: false
+  };
+  
+  try {
+    // Test user service
+    try {
+      const userResponse = await fetch(`${API_BASE_URLS.user}/api/users/register`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(3000)
+      });
+      results.user = userResponse.ok || userResponse.status === 405;
+    } catch (error) {
+      console.log('User service connectivity test failed:', error);
+    }
+    
+    // Test catalog service
+    try {
+      const catalogResponse = await fetch(`${API_BASE_URLS.catalog}/api/catalog/yachts`, {
+        signal: AbortSignal.timeout(3000)
+      });
+      results.catalog = catalogResponse.ok;
+    } catch (error) {
+      console.log('Catalog service connectivity test failed:', error);
+    }
+    
+    // Test booking service
+    try {
+      const bookingResponse = await fetch(`${API_BASE_URLS.booking}/api/bookings`, {
+        signal: AbortSignal.timeout(3000)
+      });
+      results.booking = bookingResponse.ok || bookingResponse.status === 405;
+    } catch (error) {
+      console.log('Booking service connectivity test failed:', error);
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('Error testing backend connectivity:', error);
+    return results;
+  }
+};
+
 // Funciones de autenticación
 export const authAPI = {
   async register(user: User): Promise<User> {
@@ -78,6 +125,7 @@ export const authAPI = {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(credentials),
+        signal: AbortSignal.timeout(10000), // 10 segundos de timeout
       });
       
       console.log('Respuesta del servidor de login:', response.status, response.statusText);
@@ -85,7 +133,19 @@ export const authAPI = {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Error del servidor de login:', errorText);
-        throw new Error(`Error en login: ${response.status} ${response.statusText}`);
+        
+        // Proporcionar mensajes de error más específicos
+        if (response.status === 401) {
+          throw new Error('Credenciales inválidas. Verifica tu email y contraseña.');
+        } else if (response.status === 404) {
+          throw new Error('Servicio de autenticación no encontrado. Contacta al administrador.');
+        } else if (response.status === 500) {
+          throw new Error('Error interno del servidor. Intenta nuevamente más tarde.');
+        } else if (response.status === 0) {
+          throw new Error('No se pudo conectar al servidor. Verifica tu conexión a internet.');
+        } else {
+          throw new Error(`Error en el login: ${response.status} ${response.statusText}`);
+        }
       }
       
       const loginData = await response.json();
@@ -94,10 +154,22 @@ export const authAPI = {
       return loginData;
     } catch (error) {
       console.error('Error completo en login:', error);
+      
+      // Distinguir entre diferentes tipos de errores
       if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
         throw new Error(`No se pudo conectar al servidor de autenticación. Verifica que el backend esté ejecutándose en ${API_BASE_URLS.user}`);
       }
-      throw error;
+      
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('La conexión tardó demasiado. Verifica tu conexión a internet e intenta nuevamente.');
+      }
+      
+      // Si ya es un error personalizado, reenviarlo
+      if (error instanceof Error && !error.message.includes('No se pudo conectar')) {
+        throw error;
+      }
+      
+      throw new Error('Error inesperado durante el login. Intenta nuevamente.');
     }
   },
 
@@ -110,6 +182,7 @@ export const authAPI = {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
+        signal: AbortSignal.timeout(8000), // 8 segundos de timeout
       });
       
       console.log('Respuesta del servidor:', response.status, response.statusText);
@@ -117,7 +190,17 @@ export const authAPI = {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Error del servidor:', errorText);
-        throw new Error(`Error al obtener usuario: ${response.status} ${response.statusText}`);
+        
+        // Distinguir entre diferentes tipos de errores
+        if (response.status === 401) {
+          throw new Error('Token inválido o expirado');
+        } else if (response.status === 403) {
+          throw new Error('Acceso denegado');
+        } else if (response.status === 404) {
+          throw new Error('Endpoint de usuario no encontrado');
+        } else {
+          throw new Error(`Error al obtener usuario: ${response.status} ${response.statusText}`);
+        }
       }
       
       const userData = await response.json();
@@ -125,9 +208,27 @@ export const authAPI = {
       return userData;
     } catch (error) {
       console.error('Error completo en getCurrentUser:', error);
+      
+      // Distinguir entre errores de conexión y otros errores
       if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
         throw new Error(`No se pudo conectar al servidor. Verifica que el backend esté ejecutándose en ${API_BASE_URLS.user}`);
       }
+      
+      // Si es un error de autenticación, no es un problema de conexión
+      if (error instanceof Error && (error.message.includes('Token inválido') || error.message.includes('Acceso denegado'))) {
+        throw error;
+      }
+      
+      // Manejar errores de timeout
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('La conexión tardó demasiado. Verifica tu conexión a internet e intenta nuevamente.');
+      }
+      
+      // Para otros errores, verificar si es un problema de conexión
+      if (error instanceof Error && error.message.includes('fetch')) {
+        throw new Error(`Error de conexión con el servidor en ${API_BASE_URLS.user}`);
+      }
+      
       throw error;
     }
   }
@@ -137,7 +238,10 @@ export const authAPI = {
 export const catalogAPI = {
   async getAllYachts(onlyAvailable: boolean = false): Promise<Yacht[]> {
     const response = await fetch(
-      `${API_BASE_URLS.catalog}/api/catalog/yachts?onlyAvailable=${onlyAvailable}`
+      `${API_BASE_URLS.catalog}/api/catalog/yachts?onlyAvailable=${onlyAvailable}`,
+      {
+        signal: AbortSignal.timeout(8000), // 8 segundos de timeout
+      }
     );
     
     if (!response.ok) {
@@ -148,7 +252,9 @@ export const catalogAPI = {
   },
 
   async getYachtById(id: number): Promise<Yacht> {
-    const response = await fetch(`${API_BASE_URLS.catalog}/api/catalog/yachts/${id}`);
+    const response = await fetch(`${API_BASE_URLS.catalog}/api/catalog/yachts/${id}`, {
+      signal: AbortSignal.timeout(8000), // 8 segundos de timeout
+    });
     
     if (!response.ok) {
       throw new Error('Yate no encontrado');
@@ -290,11 +396,15 @@ export const bookingAPI = {
   },
 
   async getAllBookings(token: string): Promise<Booking[]> {
-    const response = await fetch(`${API_BASE_URLS.booking}/api/bookings`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+    const response = await fetch(
+      `${API_BASE_URLS.booking}/api/bookings`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        signal: AbortSignal.timeout(8000), // 8 segundos de timeout
+      }
+    );
     
     if (!response.ok) {
       throw new Error('Error al obtener reservas');
@@ -304,11 +414,15 @@ export const bookingAPI = {
   },
 
   async getBookingById(id: number, token: string): Promise<Booking> {
-    const response = await fetch(`${API_BASE_URLS.booking}/api/bookings/${id}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+    const response = await fetch(
+      `${API_BASE_URLS.booking}/api/bookings/${id}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        signal: AbortSignal.timeout(8000), // 8 segundos de timeout
+      }
+    );
     
     if (!response.ok) {
       throw new Error('Reserva no encontrada');

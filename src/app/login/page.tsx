@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Eye, EyeOff, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
+import BackendStatus from '@/components/BackendStatus';
 
 function LoginForm() {
   const [formData, setFormData] = useState({
@@ -222,6 +223,11 @@ function LoginForm() {
                 </svg>
                 Volver al inicio
               </Link>
+            </div>
+            
+            {/* Backend Status for troubleshooting */}
+            <div className="mt-8">
+              <BackendStatus />
             </div>
           </form>
         </div>

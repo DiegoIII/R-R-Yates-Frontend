@@ -55,18 +55,49 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Función para verificar el estado del backend
   const checkBackendStatus = async () => {
     try {
-      // Intentar hacer una petición simple al backend
-      const response = await fetch('http://localhost:8081/api/catalog/yachts');
-      if (response.ok) {
-        setBackendStatus('connected');
-        return true;
+      // Verificar todos los servicios del backend
+      const services = [
+        { name: 'catalog', url: 'http://localhost:8081/api/catalog/yachts' },
+        { name: 'booking', url: 'http://localhost:8082/api/bookings' },
+        { name: 'user', url: 'http://localhost:8083/api/users/register' } // Usar endpoint público
+      ];
+      
+      let availableServices = 0;
+      
+      for (const service of services) {
+        try {
+          const response = await fetch(service.url, { 
+            method: 'GET',
+            // Agregar timeout para evitar esperas largas
+            signal: AbortSignal.timeout(5000)
+          });
+          
+          if (response.ok || response.status === 405) { // 405 Method Not Allowed también indica que el servicio está vivo
+            availableServices++;
+            console.log(`Servicio ${service.name} disponible`);
+          }
+        } catch (error) {
+          console.log(`Servicio ${service.name} no disponible:`, error);
+        }
       }
+      
+      // Considerar el backend disponible si al menos 2 de 3 servicios responden
+      const isAvailable = availableServices >= 2;
+      
+      if (isAvailable) {
+        setBackendStatus('connected');
+        console.log(`Backend disponible: ${availableServices}/3 servicios respondiendo`);
+      } else {
+        setBackendStatus('disconnected');
+        console.log(`Backend no disponible: solo ${availableServices}/3 servicios respondiendo`);
+      }
+      
+      return isAvailable;
     } catch (error) {
-      console.log('Backend no disponible:', error);
+      console.log('Error al verificar estado del backend:', error);
       setBackendStatus('disconnected');
       return false;
     }
-    return false;
   };
 
   // Función para cargar la sesión desde localStorage
@@ -85,12 +116,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           
           if (backendAvailable) {
             try {
-              // Intentar obtener la información actualizada del usuario
-              const currentUser = await authAPI.getCurrentUser(savedToken);
-              setUser(currentUser);
+              // Intentar obtener la información actualizada del usuario con retry logic
+              let currentUser: User | null = null;
+              let retryCount = 0;
+              const maxRetries = 2;
               
-              // Actualizar la información del usuario en localStorage
-              localStorage.setItem('user', JSON.stringify(currentUser));
+              while (retryCount < maxRetries && !currentUser) {
+                try {
+                  if (retryCount > 0) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                  }
+                  
+                  currentUser = await authAPI.getCurrentUser(savedToken);
+                  console.log('Usuario actual obtenido exitosamente en intento', retryCount + 1);
+                  break;
+                } catch (error) {
+                  retryCount++;
+                  console.log(`Intento ${retryCount} de obtener usuario actual falló:`, error);
+                  
+                  // Si es un error de autenticación, no seguir intentando
+                  if (error instanceof Error && (error.message.includes('Token inválido') || error.message.includes('Acceso denegado'))) {
+                    break;
+                  }
+                }
+              }
+              
+              if (currentUser) {
+                setUser(currentUser);
+                localStorage.setItem('user', JSON.stringify(currentUser));
+              } else {
+                // Si falla después de todos los intentos, usar la información guardada
+                console.log('Usando información de usuario guardada después de fallar getCurrentUser');
+                const parsedUser = JSON.parse(savedUser);
+                setUser(parsedUser);
+              }
             } catch (error) {
               console.log('Error al obtener usuario actual, usando información guardada:', error);
               
@@ -178,28 +237,53 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setToken(response.token);
       localStorage.setItem('token', response.token);
       
-      // Obtener información completa del usuario
-      try {
-        const userData = await authAPI.getCurrentUser(response.token);
+      // Obtener información completa del usuario con retry logic
+      let userData: User | null = null;
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      while (retryCount < maxRetries && !userData) {
+        try {
+          // Esperar un poco antes de intentar obtener el usuario (para dar tiempo al backend)
+          if (retryCount > 0) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          }
+          
+          userData = await authAPI.getCurrentUser(response.token);
+          console.log('Usuario obtenido exitosamente en intento', retryCount + 1);
+          break;
+        } catch (error) {
+          retryCount++;
+          console.log(`Intento ${retryCount} de obtener usuario falló:`, error);
+          
+          // Si es el último intento o es un error de autenticación, no seguir intentando
+          if (retryCount >= maxRetries || 
+              (error instanceof Error && (error.message.includes('Token inválido') || error.message.includes('Acceso denegado')))) {
+            break;
+          }
+        }
+      }
+      
+      if (userData) {
         setUser(userData);
         localStorage.setItem('user', JSON.stringify(userData));
-      } catch (error) {
-        console.error('Error al obtener usuario después del login:', error);
-        
-        // Si falla getCurrentUser, usar la información del login si está disponible
+      } else {
+        // Si falla getCurrentUser después de todos los intentos, usar la información del login si está disponible
         if (response.user) {
           setUser(response.user);
           localStorage.setItem('user', JSON.stringify(response.user));
         } else {
           // Crear usuario básico como fallback
-          const userData: User = {
+          const fallbackUser: User = {
             email: credentials.email,
             name: credentials.email.split('@')[0],
             role: 'USER'
           };
-          setUser(userData);
-          localStorage.setItem('user', JSON.stringify(userData));
+          setUser(fallbackUser);
+          localStorage.setItem('user', JSON.stringify(fallbackUser));
         }
+        
+        console.log('Usando información de usuario fallback después de fallar getCurrentUser');
       }
     } catch (error) {
       console.error('Error en login:', error);

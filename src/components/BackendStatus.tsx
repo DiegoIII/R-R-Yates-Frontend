@@ -1,57 +1,129 @@
 "use client";
 
-import { useAuth } from "@/contexts/AuthContext";
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from 'react';
+import { testBackendConnectivity } from '@/lib/api';
 
-export default function BackendStatus() {
-  const { backendStatus } = useAuth();
-  const [showStatus, setShowStatus] = useState(false);
+interface BackendStatusProps {
+  className?: string;
+}
+
+export default function BackendStatus({ className = '' }: BackendStatusProps) {
+  const [status, setStatus] = useState<{
+    user: boolean;
+    booking: boolean;
+    catalog: boolean;
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
+
+  const checkStatus = async () => {
+    setLoading(true);
+    try {
+      const results = await testBackendConnectivity();
+      setStatus(results);
+      setLastChecked(new Date());
+    } catch (error) {
+      console.error('Error checking backend status:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Solo mostrar el estado si hay un problema de conexión
-    if (backendStatus === 'disconnected') {
-      setShowStatus(true);
-    } else {
-      setShowStatus(false);
-    }
-  }, [backendStatus]);
+    checkStatus();
+    
+    // Verificar cada 30 segundos
+    const interval = setInterval(checkStatus, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
-  if (!showStatus) {
-    return null;
-  }
+  const getOverallStatus = () => {
+    if (!status) return 'unknown';
+    const availableServices = Object.values(status).filter(Boolean).length;
+    if (availableServices === 3) return 'connected';
+    if (availableServices >= 2) return 'partial';
+    return 'disconnected';
+  };
+
+  const getStatusColor = (serviceStatus: boolean) => {
+    return serviceStatus ? 'text-green-600' : 'text-red-600';
+  };
+
+  const getStatusIcon = (serviceStatus: boolean) => {
+    return serviceStatus ? '🟢' : '🔴';
+  };
+
+  const overallStatus = getOverallStatus();
 
   return (
-    <div className="fixed top-4 right-4 z-50 bg-red-50 border border-red-200 rounded-lg shadow-lg p-4 max-w-sm">
-      <div className="flex items-start space-x-3">
-        <div className="flex-shrink-0">
-          <div className="w-6 h-6 bg-red-400 rounded-full flex items-center justify-center">
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-        </div>
-        <div className="flex-1">
-          <h3 className="text-sm font-medium text-red-800 mb-2">
-            Problema de Conexión
-          </h3>
-          <p className="text-sm text-red-700 mb-3">
-            No se puede conectar al servidor. Algunas funcionalidades pueden no estar disponibles.
-          </p>
-          <div className="text-xs text-red-600">
-            <p>• Verifica tu conexión a internet</p>
-            <p>• El servidor puede estar en mantenimiento</p>
-            <p>• Intenta recargar la página más tarde</p>
-          </div>
-        </div>
+    <div className={`bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-md border ${className}`}>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-semibold text-gray-800">Estado del Backend</h3>
         <button
-          onClick={() => setShowStatus(false)}
-          className="flex-shrink-0 text-red-400 hover:text-red-600"
+          onClick={checkStatus}
+          disabled={loading}
+          className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          {loading ? 'Verificando...' : 'Verificar'}
         </button>
       </div>
+
+      {status && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">Servicio de Usuarios:</span>
+            <span className={`text-sm ${getStatusColor(status.user)}`}>
+              {getStatusIcon(status.user)} {status.user ? 'Disponible' : 'No disponible'}
+            </span>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">Servicio de Catálogo:</span>
+            <span className={`text-sm ${getStatusColor(status.catalog)}`}>
+              {getStatusIcon(status.catalog)} {status.catalog ? 'Disponible' : 'No disponible'}
+            </span>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">Servicio de Reservas:</span>
+            <span className={`text-sm ${getStatusColor(status.booking)}`}>
+              {getStatusIcon(status.booking)} {status.booking ? 'Disponible' : 'No disponible'}
+            </span>
+          </div>
+
+          <div className="border-t pt-2 mt-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">Estado General:</span>
+              <span className={`text-sm font-semibold ${
+                overallStatus === 'connected' ? 'text-green-600' :
+                overallStatus === 'partial' ? 'text-yellow-600' : 'text-red-600'
+              }`}>
+                {overallStatus === 'connected' ? '🟢 Conectado' :
+                 overallStatus === 'partial' ? '🟡 Parcialmente Conectado' : '🔴 Desconectado'}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {lastChecked && (
+        <div className="text-xs text-gray-500 mt-3 text-center">
+          Última verificación: {lastChecked.toLocaleTimeString()}
+        </div>
+      )}
+
+      {overallStatus === 'disconnected' && (
+        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-sm text-red-700">
+            <strong>Problema de conectividad detectado.</strong> Verifica que todos los servicios del backend estén ejecutándose:
+          </p>
+          <ul className="text-xs text-red-600 mt-2 space-y-1">
+            <li>• Servicio de Usuarios: http://localhost:8083</li>
+            <li>• Servicio de Catálogo: http://localhost:8081</li>
+            <li>• Servicio de Reservas: http://localhost:8082</li>
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

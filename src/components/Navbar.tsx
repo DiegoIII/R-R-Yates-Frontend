@@ -20,10 +20,10 @@ export default function Navbar() {
     if (!user) return;
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) return;
 
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const payload = JSON.parse(atob(token.split(".")[1]));
       const currentTime = Date.now() / 1000;
       const timeLeft = payload.exp - currentTime;
 
@@ -43,7 +43,7 @@ export default function Navbar() {
         setSessionTimeLeft("Menos de 1m");
       }
     } catch (error) {
-      console.error('Error al calcular tiempo de sesión:', error);
+      console.error("Error al calcular tiempo de sesión:", error);
       setSessionTimeLeft("");
     }
   };
@@ -160,9 +160,7 @@ export default function Navbar() {
                     Bienvenido, {user.name}
                   </span>
                   {sessionTimeLeft && (
-                    <span className="text-xs text-gray-500">
-                      Sesión: {sessionTimeLeft}
-                    </span>
+                    <span className="text-xs text-gray-500"></span>
                   )}
                 </div>
                 <button

@@ -2,13 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
-
-type Yacht = {
-  id: number;
-  name: string;
-  description: string;
-  imageUrl: string;
-};
+import { catalogAPI, Yacht } from "@/lib/api";
 
 export default function CatalogPage() {
   const [yachts, setYachts] = useState<Yacht[]>([]);
@@ -16,19 +10,33 @@ export default function CatalogPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("http://localhost:8081/api/catalog/yachts")
-      .then((res) => {
-        if (!res.ok) throw new Error("Error al cargar los yates");
-        return res.json();
-      })
-      .then((data) => {
+    const loadYachts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const data = await catalogAPI.getAllYachts();
         setYachts(data);
+      } catch (error) {
+        console.error('Error loading yachts:', error);
+        
+        if (error instanceof Error) {
+          if (error.message.includes('No se pudo conectar')) {
+            setError('No se pudo conectar al servidor. Verifica que el backend esté ejecutándose.');
+          } else if (error.message.includes('Error al obtener yates')) {
+            setError('Error al cargar los yates desde el servidor.');
+          } else {
+            setError(error.message);
+          }
+        } else {
+          setError('Error inesperado al cargar los yates.');
+        }
+      } finally {
         setLoading(false);
-      })
-      .catch((e) => {
-        setError(e.message);
-        setLoading(false);
-      });
+      }
+    };
+
+    loadYachts();
   }, []);
 
   return (
