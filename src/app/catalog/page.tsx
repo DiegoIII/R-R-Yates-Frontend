@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 type Yacht = {
   id: number;
@@ -58,23 +59,29 @@ export default function CatalogPage() {
                     ? "https://sailingheaven.com/wp-content/uploads/2015/03/Sun-Odyssey-49i-Yacht-Definition-2.jpg"
                     : yacht.name === "Paradise Catamaran"
                     ? "https://www.motoryachts-fountaine-pajot.com/wp-content/uploads/sites/2/2023/08/MY5-Fountaine-Pajot-Motor-Yachts-Ban-scaled.jpg"
+                    : yacht.name === "Wind Voyager"
+                    ? "https://img.nauticexpo.es/images_ne/photo-mg/20156-20368599.jpg"
                     : yacht.imageUrl
                 }
                 alt={yacht.name}
                 className="w-full h-48 object-cover rounded-t-2xl"
                 loading="lazy"
               />
+
               <div className="p-6 flex flex-col flex-grow">
                 <h2 className="text-2xl font-semibold mb-2 text-blue-700">
                   {yacht.name}
                 </h2>
                 <p className="text-gray-700 flex-grow">{yacht.description}</p>
-                <button
-                  type="button"
-                  className="mt-6 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-semibold transition-shadow shadow-lg hover:shadow-xl"
-                >
-                  Ver más
-                </button>
+
+                <Link href={`/catalog/${yacht.id}`}>
+                  <button
+                    type="button"
+                    className="mt-6 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-semibold transition-shadow shadow-lg hover:shadow-xl w-full"
+                  >
+                    Ver más
+                  </button>
+                </Link>
               </div>
             </article>
           ))}
