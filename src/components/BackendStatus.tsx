@@ -1,191 +1,129 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { API_CONFIG } from '@/config/environment';
-import { CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { testBackendConnectivity } from '@/lib/api';
 
-interface ServiceStatus {
-  name: string;
-  url: string;
-  status: 'checking' | 'online' | 'offline' | 'error';
-  responseTime?: number;
-  error?: string;
+interface BackendStatusProps {
+  className?: string;
 }
 
-export default function BackendStatus() {
-  const [services, setServices] = useState<ServiceStatus[]>([
-    { name: 'Servicio de Usuarios', url: API_CONFIG.userService, status: 'checking' },
-    { name: 'Servicio de Reservas', url: API_CONFIG.bookingService, status: 'checking' },
-    { name: 'Servicio de Catálogo', url: API_CONFIG.catalogService, status: 'checking' },
-  ]);
+export default function BackendStatus({ className = '' }: BackendStatusProps) {
+  const [status, setStatus] = useState<{
+    user: boolean;
+    booking: boolean;
+    catalog: boolean;
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
-  const checkService = async (service: ServiceStatus): Promise<ServiceStatus> => {
-    const startTime = Date.now();
-    
+  const checkStatus = async () => {
+    setLoading(true);
     try {
-      // Usar endpoints que sabemos que existen en lugar de /health
-      let endpoint = '';
-      if (service.url.includes('8083')) {
-        endpoint = '/api/users/login'; // Endpoint de login que sabemos que funciona
-      } else if (service.url.includes('8082')) {
-        endpoint = '/api/bookings'; // Endpoint de reservas
-      } else if (service.url.includes('8081')) {
-        endpoint = '/api/catalog/yachts'; // Endpoint de catálogo
-      }
-      
-      const response = await fetch(`${service.url}${endpoint}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        // Timeout de 5 segundos
-        signal: AbortSignal.timeout(5000),
-      });
-      
-      const responseTime = Date.now() - startTime;
-      
-      // Consideramos cualquier respuesta como "online" (incluso 403, 401, etc.)
-      // porque significa que el servicio está respondiendo
-      if (response.status >= 200 && response.status < 600) {
-        return {
-          ...service,
-          status: 'online',
-          responseTime,
-        };
-      } else {
-        return {
-          ...service,
-          status: 'error',
-          error: `HTTP ${response.status}`,
-          responseTime,
-        };
-      }
+      const results = await testBackendConnectivity();
+      setStatus(results);
+      setLastChecked(new Date());
     } catch (error) {
-      const responseTime = Date.now() - startTime;
-      let errorMessage = 'Error desconocido';
-      
-      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-        errorMessage = 'No se pudo conectar';
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      
-      return {
-        ...service,
-        status: 'offline',
-        error: errorMessage,
-        responseTime,
-      };
+      console.error('Error checking backend status:', error);
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const checkAllServices = async () => {
-    setServices(prev => prev.map(service => ({ ...service, status: 'checking' })));
-    
-    const updatedServices = await Promise.all(
-      services.map(service => checkService(service))
-    );
-    
-    setServices(updatedServices);
   };
 
   useEffect(() => {
-    checkAllServices();
+    checkStatus();
+    
+    // Verificar cada 30 segundos
+    const interval = setInterval(checkStatus, 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  const getStatusIcon = (status: ServiceStatus['status']) => {
-    switch (status) {
-      case 'online':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'offline':
-        return <XCircle className="w-5 h-5 text-red-500" />;
-      case 'error':
-        return <AlertCircle className="w-5 h-5 text-yellow-500" />;
-      case 'checking':
-        return <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />;
-      default:
-        return <AlertCircle className="w-5 h-5 text-gray-500" />;
-    }
+  const getOverallStatus = () => {
+    if (!status) return 'unknown';
+    const availableServices = Object.values(status).filter(Boolean).length;
+    if (availableServices === 3) return 'connected';
+    if (availableServices >= 2) return 'partial';
+    return 'disconnected';
   };
 
-  const getStatusText = (status: ServiceStatus['status']) => {
-    switch (status) {
-      case 'online':
-        return 'En línea';
-      case 'offline':
-        return 'Desconectado';
-      case 'error':
-        return 'Error';
-      case 'checking':
-        return 'Verificando...';
-      default:
-        return 'Desconocido';
-    }
+  const getStatusColor = (serviceStatus: boolean) => {
+    return serviceStatus ? 'text-green-600' : 'text-red-600';
   };
 
-  const getStatusColor = (status: ServiceStatus['status']) => {
-    switch (status) {
-      case 'online':
-        return 'text-green-600';
-      case 'offline':
-        return 'text-red-600';
-      case 'error':
-        return 'text-yellow-600';
-      case 'checking':
-        return 'text-blue-600';
-      default:
-        return 'text-gray-600';
-    }
+  const getStatusIcon = (serviceStatus: boolean) => {
+    return serviceStatus ? '🟢' : '🔴';
   };
+
+  const overallStatus = getOverallStatus();
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Estado del Backend</h3>
+    <div className={`bg-white/90 backdrop-blur-sm rounded-lg p-4 shadow-md border ${className}`}>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-semibold text-gray-800">Estado del Backend</h3>
         <button
-          onClick={checkAllServices}
-          className="px-3 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+          onClick={checkStatus}
+          disabled={loading}
+          className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Verificar
+          {loading ? 'Verificando...' : 'Verificar'}
         </button>
       </div>
-      
-      <div className="space-y-3">
-        {services.map((service, index) => (
-          <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-            <div className="flex items-center space-x-3">
-              {getStatusIcon(service.status)}
-              <div>
-                <p className="font-medium text-gray-900">{service.name}</p>
-                <p className="text-sm text-gray-500">{service.url}</p>
-              </div>
-            </div>
-            
-            <div className="text-right">
-              <p className={`font-medium ${getStatusColor(service.status)}`}>
-                {getStatusText(service.status)}
-              </p>
-              {service.responseTime && (
-                <p className="text-xs text-gray-500">
-                  {service.responseTime}ms
-                </p>
-              )}
-              {service.error && (
-                <p className="text-xs text-red-500 max-w-32 truncate" title={service.error}>
-                  {service.error}
-                </p>
-              )}
+
+      {status && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">Servicio de Usuarios:</span>
+            <span className={`text-sm ${getStatusColor(status.user)}`}>
+              {getStatusIcon(status.user)} {status.user ? 'Disponible' : 'No disponible'}
+            </span>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">Servicio de Catálogo:</span>
+            <span className={`text-sm ${getStatusColor(status.catalog)}`}>
+              {getStatusIcon(status.catalog)} {status.catalog ? 'Disponible' : 'No disponible'}
+            </span>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">Servicio de Reservas:</span>
+            <span className={`text-sm ${getStatusColor(status.booking)}`}>
+              {getStatusIcon(status.booking)} {status.booking ? 'Disponible' : 'No disponible'}
+            </span>
+          </div>
+
+          <div className="border-t pt-2 mt-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">Estado General:</span>
+              <span className={`text-sm font-semibold ${
+                overallStatus === 'connected' ? 'text-green-600' :
+                overallStatus === 'partial' ? 'text-yellow-600' : 'text-red-600'
+              }`}>
+                {overallStatus === 'connected' ? '🟢 Conectado' :
+                 overallStatus === 'partial' ? '🟡 Parcialmente Conectado' : '🔴 Desconectado'}
+              </span>
             </div>
           </div>
-        ))}
-      </div>
-      
-      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-        <p className="text-sm text-gray-600">
-          <strong>Nota:</strong> Si algún servicio aparece como "Desconectado", verifica que el backend esté ejecutándose 
-          y que las URLs en la configuración sean correctas.
-        </p>
-      </div>
+        </div>
+      )}
+
+      {lastChecked && (
+        <div className="text-xs text-gray-500 mt-3 text-center">
+          Última verificación: {lastChecked.toLocaleTimeString()}
+        </div>
+      )}
+
+      {overallStatus === 'disconnected' && (
+        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-sm text-red-700">
+            <strong>Problema de conectividad detectado.</strong> Verifica que todos los servicios del backend estén ejecutándose:
+          </p>
+          <ul className="text-xs text-red-600 mt-2 space-y-1">
+            <li>• Servicio de Usuarios: http://localhost:8083</li>
+            <li>• Servicio de Catálogo: http://localhost:8081</li>
+            <li>• Servicio de Reservas: http://localhost:8082</li>
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

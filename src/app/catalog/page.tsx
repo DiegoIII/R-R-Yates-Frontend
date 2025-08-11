@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 type Yacht = {
   id: number;
@@ -14,6 +14,7 @@ export default function CatalogPage() {
   const [yachts, setYachts] = useState<Yacht[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     fetch("http://localhost:8081/api/catalog/yachts")
@@ -30,6 +31,10 @@ export default function CatalogPage() {
         setLoading(false);
       });
   }, []);
+
+  const handleVerMas = (id: number) => {
+    router.push(`/catalog/${id}`);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-cyan-50 py-10">
@@ -73,15 +78,13 @@ export default function CatalogPage() {
                   {yacht.name}
                 </h2>
                 <p className="text-gray-700 flex-grow">{yacht.description}</p>
-
-                <Link href={`/catalog/${yacht.id}`}>
-                  <button
-                    type="button"
-                    className="mt-6 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-semibold transition-shadow shadow-lg hover:shadow-xl w-full"
-                  >
-                    Ver más
-                  </button>
-                </Link>
+                <button
+                  onClick={() => handleVerMas(yacht.id)}
+                  type="button"
+                  className="mt-6 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 rounded-xl font-semibold transition-shadow shadow-lg hover:shadow-xl"
+                >
+                  Ver más
+                </button>
               </div>
             </article>
           ))}

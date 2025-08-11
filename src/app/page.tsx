@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
 import YachtList from "@/components/YachtList";
+import Navbar from "@/components/Navbar";
 
 export default function HomePage() {
   const { user, logout, isLoading } = useAuth();
@@ -21,62 +22,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-cyan-50">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-blue-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-3">
-              <div className="relative w-12 h-12">
-                <Image
-                  src="/logo-ancla.png"
-                  alt="R-R Yates Logo"
-                  fill
-                  className="object-contain"
-                  priority
-                />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  R-R Yates Acapulco
-                </h1>
-                <p className="text-sm text-gray-500 -mt-1">
-                  Experiencia Marítima Premium
-                </p>
-              </div>
-            </div>
-            <nav className="flex items-center space-x-4">
-              {user ? (
-                <>
-                  <span className="text-gray-700 font-medium">
-                    Bienvenido, {user.name}
-                  </span>
-                  <button
-                    onClick={logout}
-                    className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                  >
-                    Cerrar Sesión
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    href="/login"
-                    className="text-gray-700 hover:text-blue-600 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-blue-50"
-                  >
-                    Iniciar Sesión
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                  >
-                    Registrarse
-                  </Link>
-                </>
-              )}
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
@@ -163,12 +109,18 @@ export default function HomePage() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-                  <button className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-lg">
+                  <Link
+                    href="/catalog"
+                    className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-lg text-center"
+                  >
                     🚢 Ver Catálogo
-                  </button>
-                  <button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-lg">
+                  </Link>
+                  <Link
+                    href="/booking"
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-lg text-center"
+                  >
                     📋 Mis Reservas
-                  </button>
+                  </Link>
                 </div>
               </div>
             ) : (
@@ -251,31 +203,6 @@ export default function HomePage() {
 
       {/* Yacht List Section */}
       <YachtList />
-
-      {/* Footer */}
-      <footer className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-3 mb-6">
-              <div className="relative w-8 h-8">
-                <Image
-                  src="/logo-ancla.png"
-                  alt="R-R Yates Logo"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-              <h4 className="text-xl font-bold">R-R Yates Acapulco</h4>
-            </div>
-            <p className="text-gray-300 text-lg mb-4">
-              Tu puerta de entrada a la aventura marítima en Acapulco
-            </p>
-            <p className="text-gray-400">
-              © 2024 R-R Yates Acapulco. Todos los derechos reservados.
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

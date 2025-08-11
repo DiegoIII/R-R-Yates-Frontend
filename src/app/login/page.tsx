@@ -223,6 +223,8 @@ function LoginForm() {
                 Volver al inicio
               </Link>
             </div>
+            
+
           </form>
         </div>
       </div>
