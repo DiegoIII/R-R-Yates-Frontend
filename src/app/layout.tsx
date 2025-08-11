@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import TokenExpirationHandler from "@/components/TokenExpirationHandler";
 import SessionNotificationWrapper from "@/components/SessionNotificationWrapper";
+import Footer from "@/components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +34,12 @@ export default function RootLayout({
         <AuthProvider>
           <TokenExpirationHandler />
           <SessionNotificationWrapper />
-          {children}
+          <div className="min-h-screen flex flex-col">
+            <main className="flex-1">
+              {children}
+            </main>
+            <Footer />
+          </div>
         </AuthProvider>
       </body>
     </html>

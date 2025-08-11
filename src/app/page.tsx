@@ -203,31 +203,6 @@ export default function HomePage() {
 
       {/* Yacht List Section */}
       <YachtList />
-
-      {/* Footer */}
-      <footer className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-3 mb-6">
-              <div className="relative w-8 h-8">
-                <Image
-                  src="/logo-ancla.png"
-                  alt="R-R Yates Logo"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-              <h4 className="text-xl font-bold">R-R Yates Acapulco</h4>
-            </div>
-            <p className="text-gray-300 text-lg mb-4">
-              Tu puerta de entrada a la aventura marítima en Acapulco
-            </p>
-            <p className="text-gray-400">
-              © 2024 R-R Yates Acapulco. Todos los derechos reservados.
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
