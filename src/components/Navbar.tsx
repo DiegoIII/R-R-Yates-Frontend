@@ -4,14 +4,58 @@ import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function Navbar() {
   const { user, logout, isLoading } = useAuth();
   const pathname = usePathname();
+  const [sessionTimeLeft, setSessionTimeLeft] = useState<string>("");
 
   const isActive = (path: string) => {
     return pathname === path;
   };
+
+  // Función para calcular el tiempo restante de la sesión
+  const calculateSessionTimeLeft = () => {
+    if (!user) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Date.now() / 1000;
+      const timeLeft = payload.exp - currentTime;
+
+      if (timeLeft <= 0) {
+        setSessionTimeLeft("Sesión expirada");
+        return;
+      }
+
+      const hours = Math.floor(timeLeft / 3600);
+      const minutes = Math.floor((timeLeft % 3600) / 60);
+
+      if (hours > 0) {
+        setSessionTimeLeft(`${hours}h ${minutes}m`);
+      } else if (minutes > 0) {
+        setSessionTimeLeft(`${minutes}m`);
+      } else {
+        setSessionTimeLeft("Menos de 1m");
+      }
+    } catch (error) {
+      console.error('Error al calcular tiempo de sesión:', error);
+      setSessionTimeLeft("");
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      calculateSessionTimeLeft();
+      // Actualizar cada minuto
+      const interval = setInterval(calculateSessionTimeLeft, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
 
   if (isLoading) {
     return (
@@ -111,12 +155,20 @@ export default function Navbar() {
           <div className="flex items-center space-x-4">
             {user ? (
               <>
-                <span className="text-gray-700 font-medium text-sm hidden sm:block">
-                  Bienvenido, {user.name}
-                </span>
+                <div className="hidden sm:flex flex-col items-end">
+                  <span className="text-gray-700 font-medium text-sm">
+                    Bienvenido, {user.name}
+                  </span>
+                  {sessionTimeLeft && (
+                    <span className="text-xs text-gray-500">
+                      Sesión: {sessionTimeLeft}
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={logout}
                   className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                  title="Cerrar sesión"
                 >
                   Cerrar Sesión
                 </button>

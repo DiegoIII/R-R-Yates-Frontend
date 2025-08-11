@@ -1,190 +1,56 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { API_CONFIG } from '@/config/environment';
-import { CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
-
-interface ServiceStatus {
-  name: string;
-  url: string;
-  status: 'checking' | 'online' | 'offline' | 'error';
-  responseTime?: number;
-  error?: string;
-}
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useState } from "react";
 
 export default function BackendStatus() {
-  const [services, setServices] = useState<ServiceStatus[]>([
-    { name: 'Servicio de Usuarios', url: API_CONFIG.userService, status: 'checking' },
-    { name: 'Servicio de Reservas', url: API_CONFIG.bookingService, status: 'checking' },
-    { name: 'Servicio de Catálogo', url: API_CONFIG.catalogService, status: 'checking' },
-  ]);
-
-  const checkService = async (service: ServiceStatus): Promise<ServiceStatus> => {
-    const startTime = Date.now();
-    
-    try {
-      // Usar endpoints que sabemos que existen en lugar de /health
-      let endpoint = '';
-      if (service.url.includes('8083')) {
-        endpoint = '/api/users/login'; // Endpoint de login que sabemos que funciona
-      } else if (service.url.includes('8082')) {
-        endpoint = '/api/bookings'; // Endpoint de reservas
-      } else if (service.url.includes('8081')) {
-        endpoint = '/api/catalog/yachts'; // Endpoint de catálogo
-      }
-      
-      const response = await fetch(`${service.url}${endpoint}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        // Timeout de 5 segundos
-        signal: AbortSignal.timeout(5000),
-      });
-      
-      const responseTime = Date.now() - startTime;
-      
-      // Consideramos cualquier respuesta como "online" (incluso 403, 401, etc.)
-      // porque significa que el servicio está respondiendo
-      if (response.status >= 200 && response.status < 600) {
-        return {
-          ...service,
-          status: 'online',
-          responseTime,
-        };
-      } else {
-        return {
-          ...service,
-          status: 'error',
-          error: `HTTP ${response.status}`,
-          responseTime,
-        };
-      }
-    } catch (error) {
-      const responseTime = Date.now() - startTime;
-      let errorMessage = 'Error desconocido';
-      
-      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-        errorMessage = 'No se pudo conectar';
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      
-      return {
-        ...service,
-        status: 'offline',
-        error: errorMessage,
-        responseTime,
-      };
-    }
-  };
-
-  const checkAllServices = async () => {
-    setServices(prev => prev.map(service => ({ ...service, status: 'checking' })));
-    
-    const updatedServices = await Promise.all(
-      services.map(service => checkService(service))
-    );
-    
-    setServices(updatedServices);
-  };
+  const { backendStatus } = useAuth();
+  const [showStatus, setShowStatus] = useState(false);
 
   useEffect(() => {
-    checkAllServices();
-  }, []);
-
-  const getStatusIcon = (status: ServiceStatus['status']) => {
-    switch (status) {
-      case 'online':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'offline':
-        return <XCircle className="w-5 h-5 text-red-500" />;
-      case 'error':
-        return <AlertCircle className="w-5 h-5 text-yellow-500" />;
-      case 'checking':
-        return <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />;
-      default:
-        return <AlertCircle className="w-5 h-5 text-gray-500" />;
+    // Solo mostrar el estado si hay un problema de conexión
+    if (backendStatus === 'disconnected') {
+      setShowStatus(true);
+    } else {
+      setShowStatus(false);
     }
-  };
+  }, [backendStatus]);
 
-  const getStatusText = (status: ServiceStatus['status']) => {
-    switch (status) {
-      case 'online':
-        return 'En línea';
-      case 'offline':
-        return 'Desconectado';
-      case 'error':
-        return 'Error';
-      case 'checking':
-        return 'Verificando...';
-      default:
-        return 'Desconocido';
-    }
-  };
-
-  const getStatusColor = (status: ServiceStatus['status']) => {
-    switch (status) {
-      case 'online':
-        return 'text-green-600';
-      case 'offline':
-        return 'text-red-600';
-      case 'error':
-        return 'text-yellow-600';
-      case 'checking':
-        return 'text-blue-600';
-      default:
-        return 'text-gray-600';
-    }
-  };
+  if (!showStatus) {
+    return null;
+  }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Estado del Backend</h3>
-        <button
-          onClick={checkAllServices}
-          className="px-3 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-        >
-          Verificar
-        </button>
-      </div>
-      
-      <div className="space-y-3">
-        {services.map((service, index) => (
-          <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-            <div className="flex items-center space-x-3">
-              {getStatusIcon(service.status)}
-              <div>
-                <p className="font-medium text-gray-900">{service.name}</p>
-                <p className="text-sm text-gray-500">{service.url}</p>
-              </div>
-            </div>
-            
-            <div className="text-right">
-              <p className={`font-medium ${getStatusColor(service.status)}`}>
-                {getStatusText(service.status)}
-              </p>
-              {service.responseTime && (
-                <p className="text-xs text-gray-500">
-                  {service.responseTime}ms
-                </p>
-              )}
-              {service.error && (
-                <p className="text-xs text-red-500 max-w-32 truncate" title={service.error}>
-                  {service.error}
-                </p>
-              )}
-            </div>
+    <div className="fixed top-4 right-4 z-50 bg-red-50 border border-red-200 rounded-lg shadow-lg p-4 max-w-sm">
+      <div className="flex items-start space-x-3">
+        <div className="flex-shrink-0">
+          <div className="w-6 h-6 bg-red-400 rounded-full flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
           </div>
-        ))}
-      </div>
-      
-      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-        <p className="text-sm text-gray-600">
-          <strong>Nota:</strong> Si algún servicio aparece como "Desconectado", verifica que el backend esté ejecutándose 
-          y que las URLs en la configuración sean correctas.
-        </p>
+        </div>
+        <div className="flex-1">
+          <h3 className="text-sm font-medium text-red-800 mb-2">
+            Problema de Conexión
+          </h3>
+          <p className="text-sm text-red-700 mb-3">
+            No se puede conectar al servidor. Algunas funcionalidades pueden no estar disponibles.
+          </p>
+          <div className="text-xs text-red-600">
+            <p>• Verifica tu conexión a internet</p>
+            <p>• El servidor puede estar en mantenimiento</p>
+            <p>• Intenta recargar la página más tarde</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setShowStatus(false)}
+          className="flex-shrink-0 text-red-400 hover:text-red-600"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
     </div>
   );
