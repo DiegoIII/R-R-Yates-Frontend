@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, use } from "react";
 import { notFound } from "next/navigation";
+import Navbar from "@/components/Navbar";
 
 type Yacht = {
   id: number;
@@ -49,20 +50,27 @@ export default function YachtDetailPage({ params }: { params: Promise<{ id: stri
 
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-cyan-50">
-        <p className="text-lg text-gray-600">Cargando yate...</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-cyan-50">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
+          <p className="text-lg text-gray-600">Cargando yate...</p>
+        </div>
       </div>
     );
   if (!yacht)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-cyan-50">
-        <p className="text-lg text-red-600 font-semibold">Yate no encontrado.</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-cyan-50">
+        <Navbar />
+        <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
+          <p className="text-lg text-red-600 font-semibold">Yate no encontrado.</p>
+        </div>
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-cyan-50 py-12 px-6">
-      <main className="max-w-5xl mx-auto bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-blue-200 p-10">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-cyan-50">
+      <Navbar />
+      <main className="max-w-5xl mx-auto bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-blue-200 p-10 my-12 mx-6">
         <h1 className="text-5xl font-extrabold text-blue-700 mb-6">{yacht.name}</h1>
         <p className="text-gray-700 text-lg mb-8">{yacht.description}</p>
 
