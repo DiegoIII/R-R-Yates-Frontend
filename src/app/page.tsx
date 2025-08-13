@@ -34,7 +34,7 @@ export default function HomePage() {
           <div className="absolute top-40 right-20 w-32 h-32 bg-indigo-300/30 rounded-full blur-xl animate-pulse delay-1000"></div>
           <div className="absolute bottom-20 left-1/4 w-24 h-24 bg-cyan-300/30 rounded-full blur-xl animate-pulse delay-2000"></div>
         </div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
           <div className="text-center">
             {/* Logo and Title */}
@@ -183,16 +183,26 @@ export default function HomePage() {
               <div className="text-gray-600 font-medium">Yates Disponibles</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-green-600 mb-2">1000+</div>
-              <div className="text-gray-600 font-medium">Clientes Satisfechos</div>
+              <div className="text-4xl font-bold text-green-600 mb-2">
+                1000+
+              </div>
+              <div className="text-gray-600 font-medium">
+                Clientes Satisfechos
+              </div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-purple-600 mb-2">24/7</div>
-              <div className="text-gray-600 font-medium">Soporte Disponible</div>
+              <div className="text-4xl font-bold text-purple-600 mb-2">
+                24/7
+              </div>
+              <div className="text-gray-600 font-medium">
+                Soporte Disponible
+              </div>
             </div>
             <div className="text-center">
               <div className="text-4xl font-bold text-orange-600 mb-2">5★</div>
-              <div className="text-gray-600 font-medium">Calificación Promedio</div>
+              <div className="text-gray-600 font-medium">
+                Calificación Promedio
+              </div>
             </div>
           </div>
         </div>
@@ -206,69 +216,87 @@ export default function HomePage() {
               ¿Por qué elegir R-R Yates?
             </h3>
             <p className="text-xl md:text-2xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
-              Ofrecemos la mejor experiencia en navegación de lujo en Acapulco con servicios premium
+              Ofrecemos la mejor experiencia en navegación de lujo en Acapulco
+              con servicios premium
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="bg-white rounded-3xl p-8 shadow-xl border border-blue-100 text-center hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-3 group">
-              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">🌟</div>
+              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">
+                🌟
+              </div>
               <h4 className="text-2xl font-bold text-gray-900 mb-4">
                 Experiencia Premium
               </h4>
               <p className="text-gray-600 text-lg leading-relaxed">
-                Yates de lujo con los más altos estándares de calidad y
-                servicio personalizado.
+                Yates de lujo con los más altos estándares de calidad y servicio
+                personalizado.
               </p>
             </div>
 
             <div className="bg-white rounded-3xl p-8 shadow-xl border border-blue-100 text-center hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-3 group">
-              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">🌊</div>
+              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">
+                🌊
+              </div>
               <h4 className="text-2xl font-bold text-gray-900 mb-4">
                 Aguas Cristalinas
               </h4>
               <p className="text-gray-600 text-lg leading-relaxed">
-                Navega por las hermosas aguas de la bahía de Acapulco con vistas espectaculares.
+                Navega por las hermosas aguas de la bahía de Acapulco con vistas
+                espectaculares.
               </p>
             </div>
 
             <div className="bg-white rounded-3xl p-8 shadow-xl border border-blue-100 text-center hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-3 group">
-              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">🎯</div>
+              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">
+                🎯
+              </div>
               <h4 className="text-2xl font-bold text-gray-900 mb-4">
                 Reservas Fáciles
               </h4>
               <p className="text-gray-600 text-lg leading-relaxed">
-                Sistema intuitivo para reservar tu yate en pocos clics con confirmación instantánea.
+                Sistema intuitivo para reservar tu yate en pocos clics con
+                confirmación instantánea.
               </p>
             </div>
 
             <div className="bg-white rounded-3xl p-8 shadow-xl border border-blue-100 text-center hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-3 group">
-              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">🛡️</div>
+              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">
+                🛡️
+              </div>
               <h4 className="text-2xl font-bold text-gray-900 mb-4">
                 Seguridad Garantizada
               </h4>
               <p className="text-gray-600 text-lg leading-relaxed">
-                Todos nuestros yates cumplen con los más altos estándares de seguridad marítima.
+                Todos nuestros yates cumplen con los más altos estándares de
+                seguridad marítima.
               </p>
             </div>
 
             <div className="bg-white rounded-3xl p-8 shadow-xl border border-blue-100 text-center hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-3 group">
-              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">⏰</div>
+              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">
+                ⏰
+              </div>
               <h4 className="text-2xl font-bold text-gray-900 mb-4">
                 Disponibilidad 24/7
               </h4>
               <p className="text-gray-600 text-lg leading-relaxed">
-                Reserva en cualquier momento del día con nuestro sistema disponible las 24 horas.
+                Reserva en cualquier momento del día con nuestro sistema
+                disponible las 24 horas.
               </p>
             </div>
 
             <div className="bg-white rounded-3xl p-8 shadow-xl border border-blue-100 text-center hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-3 group">
-              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">📍</div>
+              <div className="text-5xl mb-6 group-hover:scale-110 transition-transform">
+                📍
+              </div>
               <h4 className="text-2xl font-bold text-gray-900 mb-4">
                 Ubicación Privilegiada
               </h4>
               <p className="text-gray-600 text-lg leading-relaxed">
-                Situados en el corazón de Acapulco, con fácil acceso desde cualquier punto de la ciudad.
+                Situados en el corazón de Acapulco, con fácil acceso desde
+                cualquier punto de la ciudad.
               </p>
             </div>
           </div>
@@ -285,7 +313,8 @@ export default function HomePage() {
             ¿Listo para tu Aventura?
           </h3>
           <p className="text-xl md:text-2xl text-blue-100 mb-10 max-w-3xl mx-auto">
-            Descubre la libertad de navegar por las aguas de Acapulco con R-R Yates
+            Descubre la libertad de navegar por las aguas de Acapulco con R-R
+            Yates
           </p>
           <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-8">
             <Link
