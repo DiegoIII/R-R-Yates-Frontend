@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, use } from "react";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 
 type Yacht = {
@@ -23,8 +23,13 @@ type Yacht = {
   updatedAt: string;
 };
 
-export default function YachtDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function YachtDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = use(params);
+  const router = useRouter();
 
   const [yacht, setYacht] = useState<Yacht | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,7 +37,9 @@ export default function YachtDetailPage({ params }: { params: Promise<{ id: stri
   useEffect(() => {
     async function loadYacht() {
       try {
-        const res = await fetch(`http://localhost:8081/api/catalog/yachts/${id}`);
+        const res = await fetch(
+          `http://localhost:8081/api/catalog/yachts/${id}`
+        );
         if (!res.ok) {
           notFound();
           return;
@@ -48,6 +55,10 @@ export default function YachtDetailPage({ params }: { params: Promise<{ id: stri
     loadYacht();
   }, [id]);
 
+  const handleReserva = () => {
+    router.push(`/booking`);
+  };
+
   if (loading)
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-cyan-50">
@@ -62,7 +73,9 @@ export default function YachtDetailPage({ params }: { params: Promise<{ id: stri
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-cyan-50">
         <Navbar />
         <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
-          <p className="text-lg text-red-600 font-semibold">Yate no encontrado.</p>
+          <p className="text-lg text-red-600 font-semibold">
+            Yate no encontrado.
+          </p>
         </div>
       </div>
     );
@@ -71,10 +84,11 @@ export default function YachtDetailPage({ params }: { params: Promise<{ id: stri
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-cyan-50">
       <Navbar />
       <main className="max-w-5xl mx-auto bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-blue-200 p-10 my-12 mx-6">
-        <h1 className="text-5xl font-extrabold text-blue-700 mb-6">{yacht.name}</h1>
+        <h1 className="text-5xl font-extrabold text-blue-700 mb-6">
+          {yacht.name}
+        </h1>
         <p className="text-gray-700 text-lg mb-8">{yacht.description}</p>
 
-        {/* Imágenes */}
         <div className="flex gap-6 overflow-x-auto mb-10">
           {yacht.imageUrls.length > 0 ? (
             yacht.imageUrls.map((url, i) => (
@@ -93,37 +107,63 @@ export default function YachtDetailPage({ params }: { params: Promise<{ id: stri
           )}
         </div>
 
-        {/* Info básica */}
         <section className="grid grid-cols-1 sm:grid-cols-2 gap-8 text-gray-800 mb-10">
           <div>
-            <p><strong>Precio por día:</strong> <span className="text-blue-700">${yacht.pricePerDay.toFixed(2)}</span></p>
-            <p><strong>Capacidad:</strong> {yacht.capacity} personas</p>
-            <p><strong>Ubicación:</strong> {yacht.location}</p>
-            <p><strong>Tipo de yate:</strong> {yacht.yachtType}</p>
+            <p>
+              <strong>Precio por día:</strong>{" "}
+              <span className="text-blue-700">
+                ${yacht.pricePerDay.toFixed(2)}
+              </span>
+            </p>
+            <p>
+              <strong>Capacidad:</strong> {yacht.capacity} personas
+            </p>
+            <p>
+              <strong>Ubicación:</strong> {yacht.location}
+            </p>
+            <p>
+              <strong>Tipo de yate:</strong> {yacht.yachtType}
+            </p>
           </div>
           <div>
-            <p><strong>Longitud:</strong> {yacht.length} metros</p>
-            <p><strong>Cabinas:</strong> {yacht.cabins}</p>
-            <p><strong>Baños:</strong> {yacht.bathrooms}</p>
-            <p><strong>Tripulación:</strong> {yacht.crew}</p>
+            <p>
+              <strong>Longitud:</strong> {yacht.length} metros
+            </p>
+            <p>
+              <strong>Cabinas:</strong> {yacht.cabins}
+            </p>
+            <p>
+              <strong>Baños:</strong> {yacht.bathrooms}
+            </p>
+            <p>
+              <strong>Tripulación:</strong> {yacht.crew}
+            </p>
             <p>
               <strong>Disponibilidad:</strong>{" "}
               {yacht.available ? (
-                <span className="text-green-600 font-semibold">Disponible</span>
+                <span className="text-green-600 font-semibold">
+                  Disponible
+                </span>
               ) : (
-                <span className="text-red-600 font-semibold">No disponible</span>
+                <span className="text-red-600 font-semibold">
+                  No disponible
+                </span>
               )}
             </p>
           </div>
         </section>
 
-        {/* Amenities */}
-        <section>
-          <h2 className="text-2xl font-semibold text-blue-700 mb-4">Amenidades</h2>
+        <section className="mb-10">
+          <h2 className="text-2xl font-semibold text-blue-700 mb-4">
+            Amenidades
+          </h2>
           <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 list-disc list-inside text-gray-700">
             {yacht.amenities.length > 0 ? (
               yacht.amenities.map((amenity, i) => (
-                <li key={i} className="bg-blue-50 rounded-lg p-3 shadow-sm hover:shadow-md transition">
+                <li
+                  key={i}
+                  className="bg-blue-50 rounded-lg p-3 shadow-sm hover:shadow-md transition"
+                >
                   {amenity}
                 </li>
               ))
@@ -132,6 +172,16 @@ export default function YachtDetailPage({ params }: { params: Promise<{ id: stri
             )}
           </ul>
         </section>
+
+        {/* Botón de reserva */}
+        <div className="mt-8 flex justify-center">
+          <button
+            onClick={handleReserva}
+            className="bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 text-white py-3 px-8 rounded-xl font-semibold shadow-lg hover:shadow-xl transition"
+          >
+            Reservar
+          </button>
+        </div>
       </main>
     </div>
   );
